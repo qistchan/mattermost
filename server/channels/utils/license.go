@@ -94,6 +94,8 @@ func (l *LicenseValidatorImpl) ValidateLicense(signed []byte) (string, error) {
 	d := h.Sum(nil)
 
 	err = rsa.VerifyPKCS1v15(rsaPublic, crypto.SHA512, d, signature)
+	fmt.Println(err)
+	
 	return string(plaintext), nil
 }
 
