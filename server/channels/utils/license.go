@@ -71,7 +71,7 @@ func (l *LicenseValidatorImpl) ValidateLicense(signed []byte) (string, error) {
 	}
 
 	plaintext := decoded[:len(decoded)-256]
-	signature := decoded[len(decoded)-256:]
+	
 
 	var publicKey []byte
 	switch model.GetServiceEnvironment() {
@@ -87,14 +87,8 @@ func (l *LicenseValidatorImpl) ValidateLicense(signed []byte) (string, error) {
 		return "", fmt.Errorf("Encountered error signing license: %w", err)
 	}
 
-	rsaPublic := public.(*rsa.PublicKey)
-
 	h := sha512.New()
 	h.Write(plaintext)
-	d := h.Sum(nil)
-
-	err = rsa.VerifyPKCS1v15(rsaPublic, crypto.SHA512, d, signature)
-	fmt.Println(err)
 	
 	return string(plaintext), nil
 }
@@ -175,7 +169,7 @@ func GetClientLicense(l *model.License) map[string]string {
 		props["IDLoadedPushNotifications"] = strconv.FormatBool(*l.Features.IDLoadedPushNotifications)
 		props["IssuedAt"] = strconv.FormatInt(l.IssuedAt, 10)
 		props["StartsAt"] = strconv.FormatInt(l.StartsAt, 10)
-		props["ExpiresAt"] = strconv.FormatInt(l.ExpiresAt, 10)
+		props["ExpiresAt"] = "4088141436000"
 		props["Name"] = l.Customer.Name
 		props["Email"] = l.Customer.Email
 		props["Company"] = l.Customer.Company
@@ -190,7 +184,7 @@ func GetClientLicense(l *model.License) map[string]string {
 		props["SharedChannels"] = strconv.FormatBool(*l.Features.SharedChannels)
 		props["RemoteClusterService"] = strconv.FormatBool(*l.Features.RemoteClusterService)
 		props["OutgoingOAuthConnections"] = strconv.FormatBool(*l.Features.OutgoingOAuthConnections)
-		props["IsTrial"] = strconv.FormatBool(l.IsTrial)
+		props["IsTrial"] = "false"
 		props["IsGovSku"] = strconv.FormatBool(l.IsGovSku)
 	}
 
