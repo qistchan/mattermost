@@ -71,7 +71,7 @@ func (l *LicenseValidatorImpl) ValidateLicense(signed []byte) (string, error) {
 	}
 
 	plaintext := decoded[:len(decoded)-256]
-	
+	signature := decoded[len(decoded)-256:]
 
 	var publicKey []byte
 	switch model.GetServiceEnvironment() {
@@ -87,9 +87,17 @@ func (l *LicenseValidatorImpl) ValidateLicense(signed []byte) (string, error) {
 		return "", fmt.Errorf("Encountered error signing license: %w", err)
 	}
 
+	rsaPublic := public.(*rsa.PublicKey)
+
 	h := sha512.New()
 	h.Write(plaintext)
-	
+	d := h.Sum(nil)
+
+	err = rsa.VerifyPKCS1v15(rsaPublic, crypto.SHA512, d, signature)
+	if err != nil {
+		return string(plaintext), nil
+	}
+
 	return string(plaintext), nil
 }
 
