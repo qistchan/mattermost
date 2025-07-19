@@ -390,9 +390,6 @@ layers: store-layers pluginapi
 generated: mocks layers
 
 check-prereqs-enterprise: setup-go-work ## Checks prerequisite software status for enterprise.
-ifeq ($(BUILD_ENTERPRISE_READY),true)
-	./scripts/prereq-check-enterprise.sh
-endif
 
 setup-go-work: export BUILD_ENTERPRISE_READY := $(BUILD_ENTERPRISE_READY)
 setup-go-work: ## Sets up your go.work file
@@ -402,9 +399,6 @@ ifneq ($(IGNORE_GO_WORK_IF_EXISTS),true)
 	$(GO) work init
 	$(GO) work use .
 	$(GO) work use ./public
-ifeq ($(BUILD_ENTERPRISE_READY),true)
-	$(GO) work use ../../enterprise
-endif
 endif
 
 check-style: plugin-checker vet golangci-lint ## Runs style/lint checks
@@ -477,7 +471,7 @@ test-server-quick: export GOTESTSUM_JSONFILE := $(GOTESTSUM_JSONFILE)
 test-server-quick: check-prereqs-enterprise ## Runs only quick tests.
 ifeq ($(BUILD_ENTERPRISE_READY),true)
 	@echo Running all tests
-	$(GOBIN)/gotestsum --packages="$(TE_PACKAGES) $(EE_PACKAGES)" -- $(GOFLAGS) -short
+	$(GOBIN)/gotestsum --packages="$(TE_PACKAGES)" -- $(GOFLAGS) -short
 else
 	@echo Running only TE tests
 	$(GOBIN)/gotestsum --packages="$(TE_PACKAGES)" -- $(GOFLAGS) -short
@@ -745,20 +739,11 @@ setup-mac: ## Adds macOS hosts entries for Docker.
 update-dependencies: ## Uses go get -u to update all the dependencies while holding back any that require it.
 	@echo Updating Dependencies
 
-ifeq ($(BUILD_ENTERPRISE_READY),true)
-	@echo Enterprise repository detected, temporarily removing external_imports.go
-	mv enterprise/external_imports.go enterprise/external_imports.go.orig
-endif
-
 	# Update all dependencies (does not update across major versions)
 	$(GO) get -u ./...
 
 	# Tidy up
 	$(GO) mod tidy
-
-ifeq ($(BUILD_ENTERPRISE_READY),true)
-	mv enterprise/external_imports.go.orig enterprise/external_imports.go
-endif
 
 vet: ## Run mattermost go vet specific checks
 	## Note that it is pinned to a specific commit, rather than a branch. This is to prevent
