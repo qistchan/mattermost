@@ -67,18 +67,18 @@ ifneq ($(wildcard $(BUILD_ENTERPRISE_DIR)/.),)
   ifeq ($(BUILD_ENTERPRISE),true)
 	BUILD_ENTERPRISE_READY = true
 	BUILD_TYPE_NAME = enterprise
-	BUILD_HASH_ENTERPRISE = $(shell cd $(BUILD_ENTERPRISE_DIR) && git rev-parse HEAD)
+	BUILD_HASH_ENTERPRISE = $(shell git rev-parse HEAD)
 	BUILD_TAGS += enterprise
   else
 	BUILD_ENTERPRISE_READY = true
 	BUILD_TYPE_NAME = enterprise
-	BUILD_HASH_ENTERPRISE = $(shell cd $(BUILD_ENTERPRISE_DIR) && git rev-parse HEAD)
+	BUILD_HASH_ENTERPRISE = $(shell git rev-parse HEAD)
 	BUILD_TAGS += enterprise
   endif
 else
 	BUILD_ENTERPRISE_READY = true
 	BUILD_TYPE_NAME = enterprise
-	BUILD_HASH_ENTERPRISE = $(shell cd $(BUILD_ENTERPRISE_DIR) && git rev-parse HEAD)
+	BUILD_HASH_ENTERPRISE = $(shell git rev-parse HEAD)
 	BUILD_TAGS += enterprise
 endif
 
@@ -163,8 +163,6 @@ PLUGIN_PACKAGES += mattermost-plugin-mscalendar-v1.3.4
 PLUGIN_PACKAGES += mattermost-plugin-msteams-meetings-v2.2.0
 PLUGIN_PACKAGES += mattermost-plugin-metrics-v0.7.0
 PLUGIN_PACKAGES += mattermost-plugin-channel-export-v1.2.1
-
-EE_PACKAGES=$(shell $(GO) list $(BUILD_ENTERPRISE_DIR)/...)
 
 ifeq ($(BUILD_ENTERPRISE_READY),true)
   ALL_PACKAGES=$(TE_PACKAGES) $(EE_PACKAGES)
@@ -305,7 +303,7 @@ golang-versions: ## Install Golang versions used for compatibility testing (e.g.
 golangci-lint: ## Run golangci-lint on codebase
 	$(GO) install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6
 ifeq ($(BUILD_ENTERPRISE_READY),true)
-	$(GOBIN)/golangci-lint run ./... ./public/... $(BUILD_ENTERPRISE_DIR)/...
+	$(GOBIN)/golangci-lint run ./... ./public/...
 else
 	$(GOBIN)/golangci-lint run ./... ./public/...
 endif
@@ -767,11 +765,6 @@ vet: ## Run mattermost go vet specific checks
 	## having to backport the fix to multiple release branches for any new change.
 	$(GO) install github.com/mattermost/mattermost-govet/v2@8e4d46e3fad88497dbfe073788a87e75bbae717c
 	$(GO) vet -vettool=$(GOBIN)/mattermost-govet -structuredLogging -inconsistentReceiverName -emptyStrCmp -tFatal -configtelemetry -errorAssertions -license -inconsistentReceiverName.ignore=session_serial_gen.go,team_member_serial_gen.go,user_serial_gen.go,utils_serial_gen.go ./...
- ifeq ($(BUILD_ENTERPRISE_READY),true)
-  ifneq ($(MM_NO_ENTERPRISE_LINT),true)
-	$(GO) vet -vettool=$(GOBIN)/mattermost-govet -structuredLogging -inconsistentReceiverName -emptyStrCmp -tFatal -configtelemetry -errorAssertions -enterpriseLicense $(BUILD_ENTERPRISE_DIR)/...
-  endif
-endif
 
 vet-api: export GO := $(GO)
 vet-api: export GOBIN := $(GOBIN)
@@ -810,9 +803,6 @@ gen-serialized: ## Generates serialization methods for hot structs
 
 todo: ## Display TODO and FIXME items in the source code.
 	@! ag --ignore Makefile --ignore-dir runtime '(TODO|XXX|FIXME|"FIX ME")[: ]+'
-ifeq ($(BUILD_ENTERPRISE_READY),true)
-	@! ag --ignore Makefile --ignore-dir runtime '(TODO|XXX|FIXME|"FIX ME")[: ]+' $(BUILD_ENTERPRISE_DIR)/
-endif
 
 mmctl-build: ## Compiles and generates the mmctl binary
 	go build -trimpath -ldflags '$(MMCTL_LDFLAGS)' -o bin/mmctl ./cmd/mmctl
